@@ -1,7 +1,8 @@
 {
-  "name": "LeafID - AI Plant Identifier",
+  "name": "sUPA IMPORTANT",
   "description": "A modern mobile-first application to identify plants instantly using Gemini AI. Get detailed care instructions, toxicity information, and botanical facts with a single photo.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "geolocation"
   ]
 }

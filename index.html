@@ -106,6 +106,21 @@
             }
         }
 
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .scan-line {
+            height: 4px;
+            background: linear-gradient(to bottom, transparent, #10b981, transparent);
+            box-shadow: 0 0 20px #10b981;
+            width: 100%;
+            position: absolute;
+            z-index: 30;
+            animation: scan 2s linear infinite;
+        }
+
         .animate-bloom {
             animation: bloom 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
