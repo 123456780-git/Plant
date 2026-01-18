@@ -67,12 +67,13 @@ export interface ChatMessage {
   text: string;
 }
 
-export type View = 'home' | 'about' | 'contact' | 'history' | 'signin' | 'signup' | 'reminders';
+export type View = 'home' | 'about' | 'contact' | 'history' | 'signin' | 'signup' | 'reminders' | 'settings';
 export type HomeSearchTab = 'global' | 'history';
 
 export interface AppState {
   view: View;
   darkMode: boolean;
+  tintMode: boolean;
   isIdentifying: boolean;
   result: PlantInfo | null;
   error: string | null;

@@ -35,6 +35,20 @@
             backdrop-filter: blur(30px) saturate(160%);
         }
 
+        /* Tinted Mode Overrides - Reduces Transparency */
+        .tinted .glass {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .tinted.dark .glass {
+            background: rgba(15, 23, 42, 0.98) !important;
+            backdrop-filter: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         /* Liquid Glass Morphing Shapes - The "Bubbly" look */
         .liquid-glass {
             background: rgba(255, 255, 255, 0.2);
@@ -51,6 +65,15 @@
             box-shadow: 0 12px 64px -16px rgba(0, 0, 0, 0.6);
         }
 
+        .tinted .liquid-glass {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: none !important;
+        }
+
+        .tinted.dark .liquid-glass {
+            background: rgba(30, 41, 59, 0.98) !important;
+        }
+
         /* Pure Liquid Button Component */
         .lg-button {
             position: relative;
@@ -60,6 +83,10 @@
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
             transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
             z-index: 1;
+        }
+
+        .tinted .lg-button {
+            backdrop-filter: none !important;
         }
 
         .lg-button:hover {
@@ -164,6 +191,13 @@
         .dark .liquid-card:hover {
             background: rgba(30, 41, 59, 0.5) !important;
             box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.45);
+        }
+
+        .tinted .liquid-card:hover {
+            background: rgba(255, 255, 255, 1) !important;
+        }
+        .tinted.dark .liquid-card:hover {
+            background: rgba(15, 23, 42, 1) !important;
         }
 
         /* Tooltip Liquid Styling */

@@ -144,8 +144,6 @@ const WaterMeter: React.FC = () => {
       totalLuminance += (0.2126 * r + 0.7152 * g + 0.0722 * b);
     }
     const avgLuminance = totalLuminance / (imageData.data.length / 4);
-    // Darker surface (low luminance) usually indicates moisture in soil
-    // Mapping luminance 0-255 to moisture 100%-0%
     const estimatedMoisture = Math.max(0, Math.min(100, 100 - (avgLuminance / 2.55)));
     setMoisture(Math.round(estimatedMoisture));
   };
@@ -377,9 +375,13 @@ const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
     const savedHistory = localStorage.getItem('plant_history');
     const savedReminders = localStorage.getItem('plant_reminders');
+    const savedSettings = localStorage.getItem('plant_settings');
+    const parsedSettings = savedSettings ? JSON.parse(savedSettings) : {};
+    
     return {
       view: 'home', 
-      darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches, 
+      darkMode: parsedSettings.darkMode !== undefined ? parsedSettings.darkMode : window.matchMedia('(prefers-color-scheme: dark)').matches, 
+      tintMode: parsedSettings.tintMode !== undefined ? parsedSettings.tintMode : false,
       isIdentifying: false, 
       result: null, 
       error: null, 
@@ -403,6 +405,12 @@ const App: React.FC = () => {
   }, [state.reminders]);
 
   useEffect(() => {
+    localStorage.setItem('plant_settings', JSON.stringify({ darkMode: state.darkMode, tintMode: state.tintMode }));
+    if (state.darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [state.darkMode, state.tintMode]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
          if (e.key === 'Escape') (e.target as HTMLElement).blur();
@@ -420,6 +428,7 @@ const App: React.FC = () => {
       // Action Shortcuts
       else if (key === 'C') setState(p => ({ ...p, isChatOpen: !p.isChatOpen }));
       else if (key === 'D') setState(p => ({ ...p, darkMode: !p.darkMode }));
+      else if (key === 'T') setState(p => ({ ...p, tintMode: !p.tintMode }));
       else if (key === 'S') { e.preventDefault(); searchInputRef.current?.focus(); }
       else if (key === 'Escape') {
         if (state.isChatOpen) setState(p => ({ ...p, isChatOpen: false }));
@@ -438,11 +447,6 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.isChatOpen, state.result, isComparing, state.view]);
-
-  useEffect(() => {
-    if (state.darkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [state.darkMode]);
 
   const processFile = async (file: File) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -489,7 +493,6 @@ const App: React.FC = () => {
   const handleMockLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
-    // Simulated Secure Handshake
     setTimeout(() => {
       setState(p => ({ ...p, user: { name: 'Botanist Prime', email: 'user@leafid.bio' }, view: 'home' }));
       setIsLoggingIn(false);
@@ -723,7 +726,6 @@ const App: React.FC = () => {
                <p className="text-2xl font-bold text-slate-600 dark:text-slate-400 leading-relaxed italic">"LeafID is the intersection of high-fidelity visual neural networks and professional botanical archives."</p>
             </div>
             
-            {/* Keyboard Command Center - Updated with Numeral Shortcuts */}
             <div className="glass p-16 rounded-[5rem] space-y-12 shadow-4xl relative overflow-hidden">
                <div className="absolute top-0 right-0 p-16 opacity-5 rotate-12"><Keyboard size={240} /></div>
                <div className="flex items-center gap-6 relative z-10">
@@ -743,6 +745,7 @@ const App: React.FC = () => {
                     { key: 'S', action: 'Global Query', desc: 'Focus botanical search' },
                     { key: 'C', action: 'Bot Agent', desc: 'Toggle Expert Chat Agent' },
                     { key: 'D', action: 'Dark Protocol', desc: 'Toggle high-contrast mode' },
+                    { key: 'T', action: 'Tinted Mode', desc: 'Reduce UI transparency' },
                     { key: 'ESC', action: 'Abort View', desc: 'Reset modals and terminals' },
                   ].map((shortcut, i) => (
                     <div key={i} className="p-8 bg-white/40 dark:bg-slate-900/40 rounded-[3rem] border border-white/40 dark:border-slate-800/60 shadow-inner flex items-center gap-6 group hover:border-emerald-500/30 transition-all">
@@ -791,9 +794,6 @@ const App: React.FC = () => {
                   </div>
                   <LiquidButton type="submit" loading={isLoggingIn} className="w-full py-5 text-lg">Initialize Session</LiquidButton>
                </form>
-               <div className="text-center">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Protocol: Secure 256-bit AES</p>
-               </div>
             </div>
           </div>
         );
@@ -821,7 +821,7 @@ const App: React.FC = () => {
              <div className="glass p-14 rounded-[4rem] shadow-4xl space-y-8">
                 <div className="space-y-3">
                    <p className="text-[11px] font-black uppercase text-slate-400 ml-6 tracking-widest">Identify Yourself</p>
-                   <input placeholder="Sterling Archer" className="w-full glass p-6 rounded-[2rem] font-bold text-lg outline-none focus:ring-4 focus:ring-emerald-500/20 transition-all dark:text-white" />
+                   <input placeholder="Botanist Name" className="w-full glass p-6 rounded-[2rem] font-bold text-lg outline-none focus:ring-4 focus:ring-emerald-500/20 transition-all dark:text-white" />
                 </div>
                 <div className="space-y-3">
                    <p className="text-[11px] font-black uppercase text-slate-400 ml-6 tracking-widest">Intelligence Log</p>
@@ -829,6 +829,70 @@ const App: React.FC = () => {
                 </div>
                 <LiquidButton className="w-full py-6 text-xl">Submit Protocol</LiquidButton>
              </div>
+          </div>
+        );
+      case 'settings':
+        return (
+          <div className="py-20 animate-in fade-in slide-in-from-bottom-10 duration-700 space-y-12">
+            <h1 className="text-6xl font-black tracking-tighter">System <span className="gradient-text">Parameters.</span></h1>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+                {/* Dark Mode Toggle */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-4">Luminosity</p>
+                  <button 
+                    type="button"
+                    onClick={() => setState(p => ({ ...p, darkMode: !p.darkMode }))}
+                    className="w-full glass p-8 rounded-[3rem] flex items-center justify-between group hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                        {state.darkMode ? <Moon size={32}/> : <Sun size={32}/>}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xl font-black dark:text-white">Spectral Mode</p>
+                        <p className="text-xs font-bold text-slate-400">{state.darkMode ? "Midnight Ecology" : "Solar Exposure"}</p>
+                      </div>
+                    </div>
+                    <div className={`w-14 h-7 rounded-full p-1 transition-colors ${state.darkMode ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${state.darkMode ? 'translate-x-7' : 'translate-x-0'}`} />
+                    </div>
+                  </button>
+                </div>
+
+                {/* Tint Mode Toggle */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-4">Tactility</p>
+                  <button 
+                    type="button"
+                    onClick={() => setState(p => ({ ...p, tintMode: !p.tintMode }))}
+                    className="w-full glass p-8 rounded-[3rem] flex items-center justify-between group hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                        <Layers size={32}/>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xl font-black dark:text-white">Tinted Mode</p>
+                        <p className="text-xs font-bold text-slate-400">{state.tintMode ? "Solid Backgrounds" : "Glass Transparency"}</p>
+                      </div>
+                    </div>
+                    <div className={`w-14 h-7 rounded-full p-1 transition-colors ${state.tintMode ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${state.tintMode ? 'translate-x-7' : 'translate-x-0'}`} />
+                    </div>
+                  </button>
+                </div>
+            </div>
+
+            <div className="glass p-12 rounded-[4rem] text-center space-y-6">
+                <Activity size={48} className="mx-auto text-emerald-500" />
+                <h3 className="text-2xl font-black dark:text-white uppercase tracking-tighter">LeafID Alpha Core v7.0.4</h3>
+                <p className="text-slate-500 font-bold max-w-xl mx-auto">Neural engines are currently optimized for botanical diversity. All identified genetic data is stored in your local encrypted vault.</p>
+                <div className="flex justify-center gap-4 pt-4">
+                    <div className="px-6 py-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active Engine</div>
+                    <div className="px-6 py-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">Stable Release</div>
+                </div>
+            </div>
           </div>
         );
       default:
@@ -880,7 +944,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen selection:bg-emerald-500/30 transition-colors duration-1000 ${state.darkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen selection:bg-emerald-500/30 transition-colors duration-1000 ${state.darkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} ${state.tintMode ? 'tinted' : ''}`}>
       <nav className="sticky top-0 z-50 glass border-b border-slate-200/50 dark:border-slate-800/40 px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setState(p => ({ ...p, view: 'home', result: null }))}>
@@ -888,7 +952,7 @@ const App: React.FC = () => {
             <span className="font-extrabold text-xl tracking-tighter text-emerald-800 dark:text-emerald-400">LeafID</span>
           </div>
           <div className="hidden md:flex items-center gap-1.5 p-1 bg-white/40 dark:bg-slate-900/50 rounded-[2rem] border border-white/60 dark:border-slate-800/40">
-            {(['home', 'history', 'reminders', 'about', 'contact'] as View[]).map((v) => (
+            {(['home', 'history', 'reminders', 'about', 'contact', 'settings'] as View[]).map((v) => (
               <button key={v} onClick={() => setState(p => ({ ...p, view: v, result: null }))} className={`capitalize font-bold text-[11px] tracking-widest px-6 py-2.5 rounded-[1.5rem] transition-all flex items-center gap-2 ${state.view === v ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 dark:text-slate-400 hover:text-emerald-600'}`}>
                 {v}
               </button>
